@@ -10,15 +10,29 @@
             #instructions {
                 color: white;
                 position: absolute;
-                left: 100px;
+              padding: 20px;
                 top: 10px;
                 font-family: monospace;
+                background-color: aqua;
+                width: 100%;
+                height: 100px;
+                border-radius: 20px;
             }
 
             .measurementLabel {
                 font-family: monospace;
                 background-color: black;
                 color: white;
+            }
+            #button-click{
+                color:white;
+                background-color: red;
+                border-radius: 20px;
+                display: flex;
+                flex-direction: column;
+                justify-content: center;
+                top: 300px;
+                margin: 20px;
             }
         </style>
        
@@ -37,7 +51,10 @@
         <div id="instructions">
             Press CTRL + Left Mouse Click to start drawing a line. <br />Continue to hold CTRL and Left Mouse
             Click again to mark the end of the line.
+
+            <button id="button-click" value="off">Measurements Active</button>
         </div>
+        
 
         <script type="module">
             import * as THREE from './three.module.js';
@@ -46,6 +63,7 @@
             import { RGBELoader } from './RGBELoader.js';
             import { CSS2DRenderer, CSS2DObject } from './CSS2DRenderer.js';
 
+          
 
             const scene = new THREE.Scene()
 
@@ -80,8 +98,11 @@
 
             const controls = new OrbitControls(camera, renderer.domElement)
             controls.enableDamping = true
-
-            const pickableObjects = new Array()
+          
+          
+            
+           
+           const pickableObjects = new Array()
             const loader = new GLTFLoader()
             loader.load(
                 './ErgonomicTableScene_Nov_22_22.glb',
@@ -118,17 +139,167 @@
                 render()
             }
 
+     
+              
             let ctrlDown = false
             let lineId = 0
             let line
             let drawingLine = false
+           
             const measurementLabels = {}
+        
+         let buttonClicks=document.getElementById("button-click")
+            buttonClicks.onclick=function(){
+                if(buttonClicks.value=="off"){
+                console.log("button active")
+                buttonClicks.value="on"
+                controls.enabled=false
+
+                document.addEventListener('touchstart', (event))
+                document.addEventListener('touchend',  (event) )
+                document.addEventListener('touchmove', onDocumentTouchMove, false)    
+               
+            }
+                else{
+                    console.log("button inactive")
+                    controls.enabled=true
+                    buttonClicks.value="off"
+
+                    window.addEventListener('keydown',(event))
+                    window.addEventListener('keyup', (event))
+                    document.addEventListener('mousemove', onDocumentMouseMove, false)
+                }
+            }
+
+            document.addEventListener('touchstart', function (event) {
+                console.log(event.type)
+                if (event.type==="touchstart") {
+                   ctrlDown=false
+                   
+                    renderer.domElement.style.cursor = 'crosshair'
+                    console.log("control-1")
+                }
+            })
+
+            document.addEventListener('touchend', function (event) {
+                console.log(event.type)
+               
+                if (event.type === 'touchend') {
+                    ctrlDown = true
+                    console.log("control-2")
+                    renderer.domElement.style.cursor = 'pointer'
+                    if (drawingLine) {
+                        //delete the last line because it wasn't committed
+                        scene.remove(line)
+                        scene.remove(measurementLabels[lineId])
+                        drawingLine = false
+                        console.log("remove-line")
+                    }
+                }
+            })
+
+            
+           
+
+            const raycaster = new THREE.Raycaster()
+            let intersects
+            const mouse = new THREE.Vector2()
+            
+
+            renderer.domElement.addEventListener('pointerdown',onlyClick, false)
+            function onlyClick(event) {
+                if (!ctrlDown) {
+                    raycaster.setFromCamera(mouse, camera)
+                    console.log("raycaster")
+                    intersects = raycaster.intersectObjects(pickableObjects, false)
+                    if (intersects.length > 0) {
+                        if (!drawingLine) {
+                            //start the line
+                            console.log("!drawline")
+                            const points = []
+                            points.push(intersects[0].point)
+                            points.push(intersects[0].point.clone())
+                            const geometry = new THREE.BufferGeometry().setFromPoints(points)
+                            line = new THREE.LineSegments(
+                                geometry,
+                                new THREE.LineBasicMaterial({
+                                    color: 0xff0000,
+                                    transparent: true,
+                                    opacity: 0.75,
+                                    lineWidth : 2
+                                    // depthTest: false,
+                                    // depthWrite: false
+                                   
+                                })
+                               
+                            )
+                            line.frustumCulled = false
+                            scene.add(line)
+                            const measurementDiv = document.createElement('div')
+                            measurementDiv.className = 'measurementLabel'
+                            measurementDiv.innerText = '0.0m'
+                            const measurementLabel = new CSS2DObject(measurementDiv)
+                            measurementLabel.position.copy(intersects[0].point)
+                            measurementLabels[lineId] = measurementLabel
+                            scene.add(measurementLabels[lineId])
+                            drawingLine = true
+                            console.log("raycaster-1") 
+                        } else {
+                            //finish the line
+                            const positions = line.geometry.attributes.position.array
+                            positions[3] = intersects[0].point.x
+                            positions[4] = intersects[0].point.y
+                            positions[5] = intersects[0].point.z
+                            line.geometry.attributes.position.needsUpdate = true
+                            lineId++
+                            drawingLine = false
+                            console.log("raycaster-2") 
+                        }
+                    }
+                }
+            }
+            document.addEventListener('touchmove', onDocumentTouchMove, false)
+            function onDocumentTouchMove(event) {
+                console.log(event.type)
+                event.preventDefault()
+              
+            let touches=event.pointer
+                mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+                mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
+                if (drawingLine) {
+                    raycaster.setFromCamera(mouse, camera)
+                    intersects = raycaster.intersectObjects(pickableObjects, false)
+                    if (intersects.length > 0) {
+                        const positions = line.geometry.attributes.position.array
+                        const v0 = new THREE.Vector3(positions[0], positions[1], positions[2])
+                        const v1 = new THREE.Vector3(
+                            intersects[0].point.x,
+                            intersects[0].point.y,
+                            intersects[0].point.z
+                        )
+                        positions[3] = intersects[0].point.x
+                        positions[4] = intersects[0].point.y
+                        positions[5] = intersects[0].point.z
+                        line.geometry.attributes.position.needsUpdate = true
+                        const distance = v0.distanceTo(v1)
+                        measurementLabels[lineId].element.innerText = distance.toFixed(2) + 'm'
+                        measurementLabels[lineId].position.lerpVectors(v0, v1, 0.5)
+                    }
+                }
+            }
+
+           
+
+            //desktop measurement
+        
+          
 
             window.addEventListener('keydown', function (event) {
                 if (event.key === 'Control') {
                     ctrlDown = true
                     controls.enabled = false
                     renderer.domElement.style.cursor = 'crosshair'
+                    console.log("contol-1")
                 }
             })
 
@@ -142,13 +313,12 @@
                         scene.remove(line)
                         scene.remove(measurementLabels[lineId])
                         drawingLine = false
+                        console.log("contol-2")
                     }
                 }
             })
 
-            const raycaster = new THREE.Raycaster()
-            let intersects
-            const mouse = new THREE.Vector2()
+         
             
             renderer.domElement.addEventListener('pointerdown', onClick, false)
             function onClick(event) {
@@ -171,7 +341,9 @@
                                     lineWidth : 1
                                     // depthTest: false,
                                     // depthWrite: false
+                                 
                                 })
+                                
                             )
                             line.frustumCulled = false
                             scene.add(line)
@@ -183,6 +355,7 @@
                             measurementLabels[lineId] = measurementLabel
                             scene.add(measurementLabels[lineId])
                             drawingLine = true
+                            console.log("raycaster") 
                         } else {
                             //finish the line
                             const positions = line.geometry.attributes.position.array
@@ -192,6 +365,7 @@
                             line.geometry.attributes.position.needsUpdate = true
                             lineId++
                             drawingLine = false
+                            console.log("raycaster-1") 
                         }
                     }
                 }
