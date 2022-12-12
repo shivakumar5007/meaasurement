@@ -13,7 +13,6 @@
               padding: 20px;
                 top: 10px;
                 font-family: monospace;
-                background-color: aqua;
                 width: 100%;
                 height: 100px;
                 border-radius: 20px;
@@ -164,10 +163,10 @@
                     console.log("button inactive")
                     controls.enabled=true
                     buttonClicks.value="off"
-
                     window.addEventListener('keydown',(event))
                     window.addEventListener('keyup', (event))
                     document.addEventListener('mousemove', onDocumentMouseMove, false)
+                    Touch.controls=false
                 }
             }
 
@@ -175,7 +174,6 @@
                 console.log(event.type)
                 if (event.type==="touchstart") {
                    ctrlDown=false
-                   
                     renderer.domElement.style.cursor = 'crosshair'
                     console.log("control-1")
                 }
@@ -187,7 +185,7 @@
                 if (event.type === 'touchend') {
                     ctrlDown = true
                     console.log("control-2")
-                    //renderer.domElement.style.cursor = 'pointer'
+                    renderer.domElement.style.cursor = 'pointer'
                     if (drawingLine) {
                         //delete the last line because it wasn't committed
                         scene.remove(line)
@@ -263,7 +261,7 @@
                 console.log(event.type)
                 event.preventDefault()
               
-            let touches=event.pointer
+            //let touches=event.pointer
                 mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
                 mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
                 if (drawingLine) {
