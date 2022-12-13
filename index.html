@@ -164,7 +164,7 @@
             }
 
             document.addEventListener('touchstart', function (event) {
-                console.log(event.type)
+                console.log("currently your are touching the screen")
                 if (event.type==="touchstart") {
                    ctrlDown=false
                    
@@ -174,7 +174,7 @@
             })
 
             document.addEventListener('touchend', function (event) {
-                console.log(event.type)
+                console.log("you just now removed your finger from the screen and your touch has been ended")
                
                 if (event.type === 'touchend') {
                     ctrlDown = false
@@ -202,12 +202,11 @@
             function onlyClick(event) {
                 if (!ctrlDown) {
                     raycaster.setFromCamera(mouse, camera)
-                    console.log("raycaster")
                     intersects = raycaster.intersectObjects(pickableObjects, false)
                     if (intersects.length > 0) {
                         if (!drawingLine) {
                             //start the line
-                            console.log("!drawline")
+                            //console.log("starting the line")
                             const points = []
                             points.push(intersects[0].point)
                             points.push(intersects[0].point.clone())
@@ -235,7 +234,7 @@
                             measurementLabels[lineId] = measurementLabel
                             scene.add(measurementLabels[lineId])
                             drawingLine = true
-                            //console.log("raycaster-1") 
+                            //console.log("line has been drawing...") 
                         } else {
                             //finish the line
                             const positions = line.geometry.attributes.position.array
@@ -245,14 +244,14 @@
                             line.geometry.attributes.position.needsUpdate = true
                             lineId++
                             drawingLine = false
-                            //console.log("raycaster-2") 
+                            console.log("line has ended") 
                         }
                     }
                 }
             }
             document.addEventListener('touchmove', onDocumentTouchMove, false)
             function onDocumentTouchMove(event) {
-                console.log(event.type)
+                console.log("you are moving your finger using touchmove")
                 event.preventDefault()
               
             //let touches=event.pointer
@@ -291,7 +290,7 @@
                     ctrlDown = true
                     controls.enabled = false
                     renderer.domElement.style.cursor = 'crosshair'
-                    console.log("contol-1")
+                    console.log("keyboard control keydown")
                 }
             })
 
@@ -300,19 +299,20 @@
                     ctrlDown = false
                     controls.enabled = true
                     renderer.domElement.style.cursor = 'pointer'
+                    console.log("keyboard control keyup")
                     if (drawingLine) {
                         //delete the last line because it wasn't committed
                         scene.remove(line)
                         scene.remove(measurementLabels[lineId])
                         drawingLine = false
-                        console.log("contol-2")
+                       
                     }
                 }
             })
 
          
             
-            renderer.domElement.addEventListener('pointerdown', onClick, false)
+            /*renderer.domElement.addEventListener('pointerdown', onClick, false)
             function onClick(event) {
                 if (!ctrlDown) {
                     raycaster.setFromCamera(mouse, camera)
@@ -361,7 +361,7 @@
                         }
                     }
                 }
-            }
+            }*/
             document.addEventListener('mousemove', onDocumentMouseMove, false)
             function onDocumentMouseMove(event) {
                 event.preventDefault()
