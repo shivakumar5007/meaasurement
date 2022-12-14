@@ -25,13 +25,15 @@
                 color: white;
             }
             #button-click{
+                padding:15px 13px;
+                font-size:20px;
                 color:white;
                 background-color: red;
-                border-radius: 20px;
+                border-radius: 200px;
                 display: flex;
                 flex-direction: column;
                 justify-content: center;
-                top: 300px;
+                top: 600px;
                 margin: 20px;
             }
         </style>
@@ -159,8 +161,7 @@
                     console.log("button inactive")
                     controls.enabled=true
                     buttonClicks.value="off"
-                   
-                }
+                   }
             }
 
             document.addEventListener('touchstart', function (event) {
@@ -244,7 +245,7 @@
                             line.geometry.attributes.position.needsUpdate = true
                             lineId++
                             drawingLine = false
-                            console.log("line has ended") 
+                            //console.log("line has ended") 
                         }
                     }
                 }
