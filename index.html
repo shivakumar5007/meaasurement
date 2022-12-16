@@ -13,7 +13,6 @@
               padding: 20px;
                 top: 10px;
                 font-family: monospace;
-               
                 width: 100%;
                 height: 100px;
                 border-radius: 20px;
@@ -25,16 +24,15 @@
                 color: white;
             }
             #button-click{
-                padding:15px 13px;
-                font-size:20px;
                 color:white;
                 background-color: red;
-                border-radius: 200px;
+                border-radius: 10px;
                 display: flex;
                 flex-direction: column;
                 justify-content: center;
-                top: 600px;
+                top: 300px;
                 margin: 20px;
+                height: 40px;
             }
         </style>
        
@@ -148,48 +146,64 @@
             let line
             let drawingLine = false
            
+            let pickpoint=null
             const measurementLabels = {}
         
          let buttonClicks=document.getElementById("button-click")
             buttonClicks.onclick=function(){
-                if(buttonClicks.value=="off"){
+                if(buttonClicks.value==="off"){
                 console.log("button active")
                 buttonClicks.value="on"
                 controls.enabled=false
+
+                window.addEventListener('touchstart', touchon,false)
+                window.addEventListener('touchend',  touchoff,false)
+                document.addEventListener('touchmove', onDocumentTouchMove, false)    
+                renderer.domElement.addEventListener('touchstart',onlyClick, false)
+                document.addEventListener('mousemove', onDocumentMouseMove, false)
+               
+            }else if(buttonClicks.value==="on"){
+                console.log("inactive button")
+                controls.enabled=true
+                buttonClicks.value='off'
+                window.addEventListener('touchstart', touchon,false)
+                window.addEventListener('touchend',  touchoff,false)
+                document.addEventListener('touchmove', onDocumentTouchMove, false)    
+                renderer.domElement.addEventListener('touchstart',onlyClick, false)
+                document.addEventListener('mousemove', onDocumentMouseMove, false)
+               
             }
-                else{
-                    console.log("button inactive")
-                    controls.enabled=true
-                    buttonClicks.value="off"
-                   }
+               
             }
 
-            document.addEventListener('touchstart', function (event) {
-                console.log("currently your are touching the screen")
+            function touchon(event) {
+                console.log(event.type)
                 if (event.type==="touchstart") {
-                   ctrlDown=false
-                   
+                   ctrlDown=true
+                  // event.preventDefault()
+                   controls.enabled=false
                     renderer.domElement.style.cursor = 'crosshair'
-                    //console.log("control-1")
+                    console.log("currently your are touching the screen")
                 }
-            })
+            }
 
-            document.addEventListener('touchend', function (event) {
-                console.log("you just now removed your finger from the screen and your touch has been ended")
+           function touchoff(event) {
+                console.log(event.type)
                
                 if (event.type === 'touchend') {
                     ctrlDown = false
-                   // console.log("control-2")
+                    console.log("you just now removed your finger from the screen and your touch has been ended")
+               
                     renderer.domElement.style.cursor = 'pointer'
                     if (drawingLine) {
                         //delete the last line because it wasn't committed
-                        scene.remove(line)
-                        scene.remove(measurementLabels[lineId])
-                        drawingLine = false
-                       // console.log("remove-line")
+                        //scene.remove(line)
+                       // scene.remove(measurementLabels[lineId])
+                        //drawingLine = false
+                        //console.log("remove-line")
                     }
                 }
-            })
+            }
 
             
            
@@ -199,15 +213,16 @@
             const mouse = new THREE.Vector2()
             
 
-            renderer.domElement.addEventListener('pointerdown',onlyClick, false)
+           
             function onlyClick(event) {
                 if (!ctrlDown) {
                     raycaster.setFromCamera(mouse, camera)
+                    console.log("raycaster")
                     intersects = raycaster.intersectObjects(pickableObjects, false)
                     if (intersects.length > 0) {
                         if (!drawingLine) {
                             //start the line
-                            //console.log("starting the line")
+                           // console.log("!drawline")
                             const points = []
                             points.push(intersects[0].point)
                             points.push(intersects[0].point.clone())
@@ -235,7 +250,7 @@
                             measurementLabels[lineId] = measurementLabel
                             scene.add(measurementLabels[lineId])
                             drawingLine = true
-                            //console.log("line has been drawing...") 
+                          //  console.log("raycaster-1") 
                         } else {
                             //finish the line
                             const positions = line.geometry.attributes.position.array
@@ -245,15 +260,15 @@
                             line.geometry.attributes.position.needsUpdate = true
                             lineId++
                             drawingLine = false
-                            //console.log("line has ended") 
+                            //console.log("raycaster-2") 
                         }
                     }
                 }
             }
-            document.addEventListener('touchmove', onDocumentTouchMove, false)
+     
             function onDocumentTouchMove(event) {
                 console.log("you are moving your finger using touchmove")
-                event.preventDefault()
+             
               
             //let touches=event.pointer
                 mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
@@ -276,51 +291,50 @@
                         const distance = v0.distanceTo(v1)
                         measurementLabels[lineId].element.innerText = distance.toFixed(2) + 'm'
                         measurementLabels[lineId].position.lerpVectors(v0, v1, 0.5)
+                        
                     }
                 }
             }
 
            
 
-            //desktop measurement
+            /*desktop measurement
         
           
-
             window.addEventListener('keydown', function (event) {
                 if (event.key === 'Control') {
                     ctrlDown = true
                     controls.enabled = false
                     renderer.domElement.style.cursor = 'crosshair'
-                    console.log("keyboard control keydown")
+                    console.log("contol-1 mouse")
                 }
             })
-
             window.addEventListener('keyup', function (event) {
                 if (event.key === 'Control') {
                     ctrlDown = false
                     controls.enabled = true
                     renderer.domElement.style.cursor = 'pointer'
-                    console.log("keyboard control keyup")
                     if (drawingLine) {
                         //delete the last line because it wasn't committed
                         scene.remove(line)
                         scene.remove(measurementLabels[lineId])
                         drawingLine = false
-                       
+                        console.log("contol-2 mouse")
                     }
                 }
-            })
+            })*/
 
          
             
-            /*renderer.domElement.addEventListener('pointerdown', onClick, false)
+           /* renderer.domElement.addEventListener('pointerdown', onClick, false)
             function onClick(event) {
-                if (!ctrlDown) {
+                if (ctrlDown) {
                     raycaster.setFromCamera(mouse, camera)
                     intersects = raycaster.intersectObjects(pickableObjects, false)
                     if (intersects.length > 0) {
                         if (!drawingLine) {
                             //start the line
+                            console.log("raycaster mouse")
                             const points = []
                             points.push(intersects[0].point)
                             points.push(intersects[0].point.clone())
@@ -334,7 +348,7 @@
                                     lineWidth : 1
                                     // depthTest: false,
                                     // depthWrite: false
-                                 
+                                    
                                 })
                                 
                             )
@@ -348,7 +362,7 @@
                             measurementLabels[lineId] = measurementLabel
                             scene.add(measurementLabels[lineId])
                             drawingLine = true
-                            console.log("raycaster") 
+                            console.log("raycaster mouse1") 
                         } else {
                             //finish the line
                             const positions = line.geometry.attributes.position.array
@@ -358,13 +372,15 @@
                             line.geometry.attributes.position.needsUpdate = true
                             lineId++
                             drawingLine = false
-                            console.log("raycaster-1") 
+                            console.log("raycaster-1 mouse") 
                         }
                     }
                 }
             }*/
-            document.addEventListener('mousemove', onDocumentMouseMove, false)
-            function onDocumentMouseMove(event) {
+            
+          
+            /*function onDocumentMouseMove(event) {
+                
                 event.preventDefault()
                 mouse.x = (event.clientX / window.innerWidth) * 2 - 1
                 mouse.y = -(event.clientY / window.innerHeight) * 2 + 1
@@ -378,6 +394,7 @@
                             intersects[0].point.x,
                             intersects[0].point.y,
                             intersects[0].point.z
+                           
                         )
                         positions[3] = intersects[0].point.x
                         positions[4] = intersects[0].point.y
@@ -386,6 +403,7 @@
                         const distance = v0.distanceTo(v1)
                         measurementLabels[lineId].element.innerText = distance.toFixed(2) + 'm'
                         measurementLabels[lineId].position.lerpVectors(v0, v1, 0.5)
+                        console.log("mousemove")
                     }
                 }
             }
@@ -400,7 +418,9 @@
                 renderer.render(scene, camera)
             }
             animate()
-            window.focus()
+            window.focus()*/
         </script>
     </body>
 </html>
+
+
